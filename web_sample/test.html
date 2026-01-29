@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>API接続テスト</title>
+</head>
+<body>
+    <h1>API接続テスト</h1>
+    <button onclick="testAPI()">APIテスト実行</button>
+    <div id="result" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'テスト中...';
+
+            // テスト1: localhost
+            try {
+                resultDiv.innerHTML += '<br>テスト1: http://localhost:8080/api/collections';
+                const response1 = await fetch('http://localhost:8080/api/collections');
+                const data1 = await response1.json();
+                resultDiv.innerHTML += '<br>✅ 成功! データ: ' + JSON.stringify(data1);
+            } catch (error) {
+                resultDiv.innerHTML += '<br>❌ 失敗: ' + error.message;
+            }
+
+            // テスト2: WSL2 IP
+            try {
+                resultDiv.innerHTML += '<br><br>テスト2: http://172.22.75.164:8080/api/collections';
+                const response2 = await fetch('http://172.22.75.164:8080/api/collections');
+                const data2 = await response2.json();
+                resultDiv.innerHTML += '<br>✅ 成功! データ: ' + JSON.stringify(data2);
+            } catch (error) {
+                resultDiv.innerHTML += '<br>❌ 失敗: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

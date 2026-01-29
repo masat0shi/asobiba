@@ -1,0 +1,10 @@
+# バイナリ
+main
+
+# テストファイル
+*_test.go
+
+# その他
+.git
+.gitignore
+README.md

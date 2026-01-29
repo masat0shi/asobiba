@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>コレクション管理アプリ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-primary: #e8e4df;
+            --bg-secondary: #f5f2ed;
+            --bg-tertiary: #ddd9d3;
+            --text-primary: #2c2c2c;
+            --text-secondary: #5c5c5c;
+            --text-muted: #8c8c8c;
+            --border-color: #c9c4bc;
+            --border-light: #d9d5ce;
+            --accent-gradient: var(--theme-gradient, linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%));
+            --accent-color: var(--theme-color, #dc2743);
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            --hover-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #000000;
+            --bg-secondary: #121212;
+            --bg-tertiary: #1e1e1e;
+            --text-primary: #fafafa;
+            --text-secondary: #a3a3a3;
+            --text-muted: #737373;
+            --border-color: #262626;
+            --border-light: #363636;
+            --card-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            --hover-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            --accent-gradient: var(--theme-gradient, linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%));
+            --accent-color: var(--theme-color, #dc2743);
+        }
+
+        /* 設定カラーピッカー */
+        .color-option-large {
+            cursor: pointer;
+        }
+        .color-option-large:hover {
+            background: var(--border-color) !important;
+        }
+
+        /* 数値入力のスピンボタン非表示 */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        /* 日付入力のカスタマイズ */
+        input[type="date"] {
+            color-scheme: light;
+            position: relative;
+        }
+        [data-theme="dark"] input[type="date"] {
+            color-scheme: dark;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            border-radius: 4px;
+            padding: 4px;
+            background-color: var(--bg-tertiary);
+            transition: background-color 0.2s;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            background-color: var(--border-color);
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .ig-gradient {
+            background: var(--accent-gradient);
+        }
+
+        .ig-gradient-text {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .ig-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s;
+        }
+
+        .ig-card:hover {
+            box-shadow: var(--hover-shadow);
+        }
+
+        .ig-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .ig-input {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .ig-input:focus {
+            border-color: #a3a3a3;
+            outline: none;
+        }
+
+        .ig-btn {
+            background: var(--accent-gradient);
+            color: white;
+            font-weight: 600;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .ig-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        .ig-btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .ig-btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .collection-tab {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+        }
+
+        .collection-tab:hover {
+            background: var(--border-color);
+        }
+
+        .collection-tab.active {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+        }
+
+        .items-grid {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .item-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .item-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .item-card .item-image {
+            aspect-ratio: 1;
+            background: var(--bg-tertiary);
+            overflow: hidden;
+        }
+
+        .item-card .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .item-card:hover .item-image img {
+            transform: scale(1.05);
+        }
+
+        .item-card .item-info {
+            padding: 12px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .item-clickable {
+            cursor: pointer;
+        }
+
+        .item-info-display {
+            padding: 10px 12px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .item-actions-bottom {
+            padding: 0 12px 12px;
+        }
+
+        .item-actions-bottom button {
+            padding: 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .stats-card {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 18px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--border-color);
+            transform: scale(1.1);
+        }
+
+        .modal-overlay {
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        /* Stories風コレクションリング */
+        .collection-ring {
+            padding: 3px;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+        }
+
+        .collection-ring-inner {
+            background: var(--bg-secondary);
+            padding: 2px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="h-screen font-sans flex flex-col overflow-hidden">
+    <!-- Fixed Header -->
+    <header class="ig-header flex-shrink-0 z-40 py-3">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="flex items-center justify-between mb-3">
+                <h1 class="text-xl md:text-2xl font-bold">
+                    <span class="ig-gradient-text">Collection</span>
+                </h1>
+                <button class="theme-toggle" onclick="openSettingsModal()">
+                    ⚙️
+                </button>
+            </div>
+            <div class="flex flex-wrap gap-2 items-center" id="collections-selector">
+                <button onclick="openCollectionModal()"
+                        class="ig-btn px-4 py-2 text-sm rounded-full">
+                    ＋ 新規作成
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Fixed Stats & Toolbar -->
+    <div class="flex-shrink-0 max-w-4xl w-full mx-auto px-4 pt-4">
+        <!-- Stats Bar -->
+        <div class="grid grid-cols-2 gap-4 mb-5">
+            <div class="stats-card text-center">
+                <div class="text-sm mb-1" style="color: var(--text-secondary)">アイテム数</div>
+                <div class="text-2xl md:text-3xl font-bold ig-gradient-text" id="total-items">0</div>
+            </div>
+            <div class="stats-card text-center">
+                <div class="text-sm mb-1" style="color: var(--text-secondary)">合計金額</div>
+                <div class="text-2xl md:text-3xl font-bold ig-gradient-text" id="total-price">¥0</div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="flex flex-col md:flex-row gap-3 mb-5">
+            <input type="text"
+                   id="search-box"
+                   placeholder="🔍 検索..."
+                   class="ig-input flex-1 px-4 py-3 rounded-xl">
+            <button onclick="openItemModal()"
+                    class="ig-btn px-6 py-3 rounded-xl whitespace-nowrap">
+                ＋ アイテムを追加
+            </button>
+        </div>
+    </div>
+
+    <!-- Scrollable Items Grid -->
+    <div class="flex-1 overflow-y-auto min-h-0">
+        <div class="max-w-4xl mx-auto px-4 pb-8">
+            <div id="items-grid" class="items-grid p-4">
+                <div class="text-center py-16">
+                    <div class="text-6xl mb-4">✨</div>
+                    <div class="text-lg" style="color: var(--text-secondary)">コレクションを選択してください</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collection Modal -->
+    <div id="collection-modal" class="hidden fixed inset-0 modal-overlay z-50 items-center justify-center p-4">
+        <div class="modal-card p-6 md:p-8 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 id="collection-modal-title" class="text-xl font-bold mb-6 ig-gradient-text">新しいコレクション</h2>
+            <form id="collection-form" onsubmit="saveCollection(event)">
+                <input type="hidden" id="collection-id">
+                <div class="mb-5">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary)">コレクション名 *</label>
+                    <input type="text"
+                           id="collection-name"
+                           required
+                           class="ig-input w-full px-4 py-3 rounded-xl">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary)">説明</label>
+                    <textarea id="collection-description"
+                              class="ig-input w-full px-4 py-3 rounded-xl resize-vertical min-h-[80px]"></textarea>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button"
+                            onclick="closeCollectionModal()"
+                            class="ig-btn-secondary flex-1 px-4 py-3 rounded-xl font-semibold">
+                        キャンセル
+                    </button>
+                    <button type="submit"
+                            class="ig-btn flex-1 px-4 py-3 rounded-xl">
+                        保存
+                    </button>
+                </div>
+            </form>
+            <button type="button"
+                    id="collection-delete-btn"
+                    onclick="deleteCurrentCollection()"
+                    class="hidden w-full mt-4 px-4 py-3 rounded-xl font-semibold text-red-500 border border-red-300 hover:bg-red-50 transition-colors"
+                    style="background: var(--bg-tertiary);">
+                このコレクションを削除
+            </button>
+        </div>
+    </div>
+
+    <!-- Item Modal -->
+    <div id="item-modal" class="hidden fixed inset-0 modal-overlay z-50 items-center justify-center p-4">
+        <div class="modal-card p-6 md:p-8 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 id="item-modal-title" class="text-xl font-bold mb-6 ig-gradient-text">新しいアイテム</h2>
+            <form id="item-form" onsubmit="saveItem(event)">
+                <input type="hidden" id="item-id">
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary)">アイテム名 *</label>
+                    <input type="text"
+                           id="item-name"
+                           required
+                           class="ig-input w-full px-4 py-3 rounded-xl">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary)">購入日</label>
+                    <input type="date"
+                           id="item-purchase-date"
+                           class="ig-input w-full px-4 py-3 rounded-xl">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary)">画像</label>
+                    <input type="file"
+                           id="item-image"
+                           accept="image/*"
+                           onchange="previewImage(event)"
+                           class="hidden">
+                    <input type="hidden" id="item-image-url">
+                    <div id="image-preview" class="hidden mb-3">
+                        <img id="preview-img" class="w-full max-h-48 object-cover rounded-xl">
+                    </div>
+                    <button type="button"
+                            onclick="document.getElementById('item-image').click()"
+                            class="ig-btn-secondary w-full px-4 py-3 rounded-xl font-medium flex items-center justify-center gap-2">
+                        <span id="file-label">画像を選択</span>
+                    </button>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary)">価格（円）</label>
+                    <input type="number"
+                           id="item-price"
+                           min="0"
+                           step="0.01"
+                           class="ig-input w-full px-4 py-3 rounded-xl">
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary)">メモ</label>
+                    <textarea id="item-memo"
+                              class="ig-input w-full px-4 py-3 rounded-xl resize-vertical min-h-[80px]"></textarea>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button"
+                            onclick="closeItemModal()"
+                            class="ig-btn-secondary flex-1 px-4 py-3 rounded-xl font-semibold">
+                        キャンセル
+                    </button>
+                    <button type="submit"
+                            class="ig-btn flex-1 px-4 py-3 rounded-xl">
+                        保存
+                    </button>
+                </div>
+            </form>
+            <button type="button"
+                    id="item-delete-btn"
+                    onclick="deleteCurrentItem()"
+                    class="hidden w-full mt-4 px-4 py-3 rounded-xl font-semibold text-red-500 border border-red-300 hover:bg-red-50 transition-colors"
+                    style="background: var(--bg-tertiary);">
+                このアイテムを削除
+            </button>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detail-modal" class="hidden fixed inset-0 modal-overlay z-50 items-center justify-center p-4">
+        <div class="modal-card p-6 md:p-8 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 id="detail-name" class="text-xl font-bold mb-4 ig-gradient-text"></h2>
+            <img id="detail-image" class="w-full max-h-64 object-cover rounded-xl mb-4 hidden">
+            <div class="space-y-3 mb-6">
+                <div class="flex justify-between items-center py-2 border-b" style="border-color: var(--border-light)">
+                    <span style="color: var(--text-secondary)">購入日</span>
+                    <span id="detail-date" class="font-medium"></span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b" style="border-color: var(--border-light)">
+                    <span style="color: var(--text-secondary)">価格</span>
+                    <span id="detail-price" class="font-bold ig-gradient-text"></span>
+                </div>
+                <div class="py-2">
+                    <span class="block mb-2" style="color: var(--text-secondary)">メモ</span>
+                    <p id="detail-memo" class="p-3 rounded-xl whitespace-pre-wrap" style="background: var(--bg-tertiary)"></p>
+                </div>
+            </div>
+            <button onclick="closeDetailModal()"
+                    class="ig-btn-secondary w-full px-4 py-3 rounded-xl font-semibold">
+                閉じる
+            </button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="hidden fixed inset-0 modal-overlay z-50 items-center justify-center p-4">
+        <div class="modal-card p-6 md:p-8 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-6 ig-gradient-text">設定</h2>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium mb-3" style="color: var(--text-secondary)">テーマカラー</label>
+                <div class="grid grid-cols-4 gap-3" id="settings-color-picker">
+                    <!-- Colors will be added by JS -->
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium mb-3" style="color: var(--text-secondary)">表示モード</label>
+                <div class="flex gap-3">
+                    <button onclick="setTheme('light')" id="theme-light-btn" class="flex-1 py-3 px-4 rounded-xl font-medium transition-all" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                        ☀️ ライト
+                    </button>
+                    <button onclick="setTheme('dark')" id="theme-dark-btn" class="flex-1 py-3 px-4 rounded-xl font-medium transition-all" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                        🌙 ダーク
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="closeSettingsModal()"
+                    class="ig-btn w-full px-4 py-3 rounded-xl font-semibold">
+                閉じる
+            </button>
+        </div>
+    </div>
+
+    <script src="collection.js"></script>
+</body>
+</html>
