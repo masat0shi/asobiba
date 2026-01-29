@@ -2,7 +2,7 @@
         // 例: https://your-app-name.onrender.com
         const API_HOST = window.location.hostname === 'localhost'
             ? 'http://localhost:8080'
-            : 'https://YOUR_RENDER_APP_NAME.onrender.com';
+            : 'https://collection-api-ljag.onrender.com';
         const API_BASE_URL = `${API_HOST}/api`;
         let currentCollectionId = null;
         let collections = [];
