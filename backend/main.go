@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -96,14 +97,22 @@ func main() {
 
 func initDB() {
 	var err error
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		dbHost, dbPort, dbUser, dbPassword, dbName)
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		dbHost := os.Getenv("DB_HOST")
+		dbPort := os.Getenv("DB_PORT")
+		dbUser := os.Getenv("DB_USER")
+		dbPassword := os.Getenv("DB_PASSWORD")
+		dbName := os.Getenv("DB_NAME")
+		sslMode := os.Getenv("DB_SSLMODE")
+		if sslMode == "" {
+			sslMode = "disable"
+		}
+
+		connStr = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+			dbHost, dbPort, dbUser, dbPassword, dbName, sslMode)
+	}
 
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
@@ -115,6 +124,43 @@ func initDB() {
 	}
 
 	log.Println("データベース接続成功")
+
+	runMigrations()
+}
+
+func runMigrations() {
+	migrations := []string{
+		`CREATE TABLE IF NOT EXISTS collections (
+			id SERIAL PRIMARY KEY,
+			name VARCHAR(255) NOT NULL,
+			description TEXT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS items (
+			id SERIAL PRIMARY KEY,
+			collection_id INTEGER NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+			name VARCHAR(255) NOT NULL,
+			image_url TEXT,
+			purchase_date DATE,
+			price DECIMAL(10, 2),
+			memo TEXT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_items_collection_id ON items(collection_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_items_name ON items(name)`,
+		`CREATE INDEX IF NOT EXISTS idx_items_purchase_date ON items(purchase_date)`,
+	}
+
+	for _, migration := range migrations {
+		if _, err := db.Exec(migration); err != nil {
+			trimmed := strings.SplitN(migration, "\n", 2)[0]
+			log.Printf("マイグレーション警告 (%s...): %v", trimmed, err)
+		}
+	}
+
+	log.Println("マイグレーション完了")
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {

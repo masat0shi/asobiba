@@ -1,4 +1,9 @@
-        const API_BASE_URL = 'http://localhost:8080/api';
+        // Render デプロイ後、YOUR_RENDER_APP_NAME を実際のアプリ名に置き換えてください
+        // 例: https://your-app-name.onrender.com
+        const API_HOST = window.location.hostname === 'localhost'
+            ? 'http://localhost:8080'
+            : 'https://YOUR_RENDER_APP_NAME.onrender.com';
+        const API_BASE_URL = `${API_HOST}/api`;
         let currentCollectionId = null;
         let collections = [];
         let items = [];
@@ -238,7 +243,7 @@
                 // 画像表示の処理
                 let imageHTML;
                 if (item.image_url) {
-                    imageHTML = `<div class="item-image"><img src="http://localhost:8080${item.image_url}" alt="${item.name}"></div>`;
+                    imageHTML = `<div class="item-image"><img src="${API_HOST}${item.image_url}" alt="${item.name}"></div>`;
                 } else {
                     imageHTML = `<div class="item-image flex items-center justify-center text-5xl">📦</div>`;
                 }
@@ -311,7 +316,7 @@
             formData.append('image', file);
 
             try {
-                const response = await fetch('http://localhost:8080/api/upload', {
+                const response = await fetch(`${API_BASE_URL}/upload`, {
                     method: 'POST',
                     body: formData
                 });
@@ -512,7 +517,7 @@
 
             const detailImage = document.getElementById('detail-image');
             if (item.image_url) {
-                detailImage.src = 'http://localhost:8080' + item.image_url;
+                detailImage.src = API_HOST + item.image_url;
                 detailImage.classList.remove('hidden');
             } else {
                 detailImage.classList.add('hidden');
@@ -545,7 +550,7 @@
                 document.getElementById('item-image-url').value = item.image_url;
                 const preview = document.getElementById('image-preview');
                 const img = document.getElementById('preview-img');
-                img.src = 'http://localhost:8080' + item.image_url;
+                img.src = API_HOST + item.image_url;
                 preview.classList.remove('hidden');
                 document.getElementById('file-label').textContent = '画像を変更';
             } else {
